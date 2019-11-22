@@ -9,15 +9,15 @@ const App = () => {
 
   useEffect(() => {
     getMessages().then(response => {
-      setLastEtag(response.headers.ETag)
+      setLastEtag(response.headers.etag)
       setMessages(response.data);
     })
     setInterval(() => {
       checkForUpdate().then(response => {
-        const newEtag = response.headers.ETag;
+        const newEtag = response.headers.etag;
         if( newEtag !== lastEtag) {
           getMessages().then(response => {
-            setLastEtag(response.headers.ETag)
+            setLastEtag(response.headers.etag)
             setMessages([...messages, ...response.data]);
           })
         }
