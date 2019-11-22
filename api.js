@@ -20,3 +20,7 @@ export const sendMessage = (message, login) => {
     login
   })
 }
+
+export const checkForUpdate = () => {
+  return instance.head('/messages');
+}

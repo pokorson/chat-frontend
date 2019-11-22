@@ -1,15 +1,28 @@
 import {render, h} from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import {login, getMessages, sendMessage} from './api';
+import {login, getMessages, sendMessage, checkForUpdate} from './api';
 
 const App = () => {
   const [user, setUser] = useState("");
   const [messages, setMessages] = useState([]);
+  const [lastEtag, setLastEtag] = useState("")
 
   useEffect(() => {
     getMessages().then(response => {
+      setLastEtag(response.headers.ETag)
       setMessages(response.data);
     })
+    setInterval(() => {
+      checkForUpdate().then(response => {
+        const newEtag = response.headers.ETag;
+        if( newEtag !== lastEtag) {
+          getMessages().then(response => {
+            setLastEtag(response.headers.ETag)
+            setMessages([...messages, ...response.data]);
+          })
+        }
+      })
+    }, 1000)
   }, [])
 
   const handleLogin = (nick) => {
