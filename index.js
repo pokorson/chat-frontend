@@ -7,23 +7,30 @@ const App = () => {
   const [messages, setMessages] = useState([]);
   const [lastEtag, setLastEtag] = useState("")
 
-  useEffect(() => {
-    getMessages().then(response => {
-      setLastEtag(response.headers.ETag)
-      setMessages(response.data);
-    })
-    setInterval(() => {
+  const checkForMessages = (etag) => {
+    setTimeout(() => {
       checkForUpdate().then(response => {
-        const newEtag = response.headers.ETag;
-        if( newEtag !== lastEtag) {
+        const newEtag = response.headers.etag;
+        if( newEtag !== etag) {
           getMessages().then(response => {
-            setLastEtag(response.headers.ETag)
-            setMessages([...messages, ...response.data]);
+            setLastEtag(response.headers.etag)
+            setMessages(response.data);
+            checkForMessages(response.headers.etag)
           })
+        } else {
+          checkForMessages(newEtag)
         }
       })
-    }, 1000)
-  }, [])
+    }, 4000);
+  }
+
+  useEffect(() => {
+    getMessages().then(response => {
+      setLastEtag(response.headers.etag)
+      setMessages(response.data);
+      checkForMessages(response.headers.etag);
+    })
+  }, [lastEtag])
 
   const handleLogin = (nick) => {
     login(nick).then(response => {
@@ -34,7 +41,6 @@ const App = () => {
 
   return (
     <div>
-      <h1>Nodeschool chat</h1>
       {!user && (<LoginForm onLogin={handleLogin} />)}
       {user && <Chat messages={messages} user={user} setMessages={setMessages} />}
     </div>
@@ -48,7 +54,8 @@ const LoginForm = ({onLogin}) => {
     onLogin(loginInput)
   }
   return (
-    <div>
+    <div className="loginForm">
+      <h1>Nodeschool chat</h1>
       <form onSubmit={handleSubmit}>
         <label>Nick:</label>
         <input onChange={(e) => setLogin(e.target.value)} value={loginInput} />
@@ -69,11 +76,15 @@ const Chat = ({user, messages, setMessages}) => {
     })
   }
   return (
-    <div>
-      <h2>Chat</h2>
-      <h4>Hello {user.login}</h4>
+    <div className="chat">
       <div>
-        messages:
+
+      <h1>Nodeschool chat</h1>
+      <h4>Hello {user.login}</h4>
+      </div>
+      <div>
+
+      <div>
         {messages.map(message => {
           return (
             <div>
@@ -83,9 +94,10 @@ const Chat = ({user, messages, setMessages}) => {
         })}
       </div>
       <form onSubmit={handleSubmit}>
-        <textarea onChange={(e) => setMessageInput(e.target.value)} value={messageInput} placeholder="Type your message here..." />
+        <textarea className="messageInput" onChange={(e) => setMessageInput(e.target.value)} value={messageInput} placeholder="Type your message here..." />
         <input type="submit" value="send message" />
       </form>
+      </div>
     </div>
   )
 }
